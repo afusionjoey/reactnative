@@ -23,40 +23,40 @@ class ExperimentProject extends Component {
       tag: 'lol'
     };
     this.state = {
-      imageUrl: [],
-      blogName: [],
-      timestamp: [],
       dataSource: new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2})
     }
   }
 
   getData() {
     var url = this.api.uri + '?api_key=' + this.api.key + '&tag=' + this.api.tag;
+    var arr = [];
 
     fetch(url).then((res) => res.json())
-    .then((json) => json.response.filter(item => item.photos && item.photos.length > 0)
+    .then((resData) => {
+      arr = resData.response.filter(item => item.photos && item.photos.length > 0)
       .map((item) => {
-        this.setState({
-          imageUrl: item.photos[0].alt_sizes[2].url,
-          blogName: item.blog_name,
-          timestamp: item.timestamp,
-        });
+        return [
+          [item.photos[0].alt_sizes[2].url],
+          [item.blog_name],
+          [item.timestamp]
+        ]
+      });
 
-        console.log(this.state.blogName);
-      })
-    );
+      this.setState({dataSource: this.state.dataSource.cloneWithRows(arr)});
+      console.log(arr);
+    });
   }
 
   componentDidMount() {
     this.getData();
   }
 
-  // renderData(data) {
-  //   return(
-  //     // <TouchableHighlight>
-  //       <Image source={{uri: data.}}
-  //   )
-  // }
+  renderData(data) {
+    return(
+      // <Image source={{ uri: data[0] }}></Image>
+        <Text> {data[0]} </Text>
+    )
+  }
 
   render() {
     return (
@@ -64,7 +64,8 @@ class ExperimentProject extends Component {
       <ListView
         style={styles.container}
         dataSource={this.state.dataSource}
-        renderRow={(data) => <View><Text>{data}</Text></View>}
+        renderRow={this.renderData.bind(this)}
+        renderSeparator={(sectionId, rowId) => <View key={rowId} style={styles.separator} />}
       />
     );
   }
@@ -88,6 +89,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#333333',
     marginBottom: 5,
+  },
+  separator: {
+    flex: 1,
+    height: 2,
+    backgroundColor: '#8E8E8E',
   },
 });
 
