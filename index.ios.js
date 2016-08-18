@@ -33,17 +33,8 @@ class ExperimentProject extends Component {
 
     fetch(url).then((res) => res.json())
     .then((resData) => {
-      arr = resData.response.filter(item => item.photos && item.photos.length > 0)
-      .map((item) => {
-        return [
-          [item.photos[0].alt_sizes[2].url],
-          [item.blog_name],
-          [item.timestamp]
-        ]
-      });
-
-      this.setState({dataSource: this.state.dataSource.cloneWithRows(arr)});
-      console.log(arr);
+      this.setState({dataSource: this.state.dataSource.cloneWithRows(resData.response.filter(item => item.photos && item.photos.length > 0))});
+      console.log(resData.response[0].photos[0].alt_sizes[2].url);
     });
   }
 
@@ -53,8 +44,9 @@ class ExperimentProject extends Component {
 
   renderData(data) {
     return(
-      // <Image source={{ uri: data[0] }}></Image>
-        <Text> {data[0]} </Text>
+      <Image source={{ uri: data.photos[0].alt_sizes[2].url }} style={styles.backgroundImage}>
+        <Text>{data.blog_name} {data.timestamp}</Text>
+      </Image>
     )
   }
 
@@ -94,6 +86,12 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 2,
     backgroundColor: '#8E8E8E',
+  },
+  backgroundImage: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    height: 150,
   },
 });
 
