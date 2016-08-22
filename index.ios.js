@@ -11,8 +11,10 @@ import {
   Text,
   View,
   ListView,
-  Image
+  Image,
 } from 'react-native';
+// import InfiniteScrollView from 'react-native-infinite-scroll-view';
+import RefreshInfiniteListView from 'react-native-refresh-infinite-listview';
 
 class ExperimentProject extends Component {
   constructor(props) {
@@ -23,18 +25,42 @@ class ExperimentProject extends Component {
       tag: 'lol'
     };
     this.state = {
-      dataSource: new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2})
+      dataSource: new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2}),
+      list: []
     }
   }
 
   getData() {
     var url = this.api.uri + '?api_key=' + this.api.key + '&tag=' + this.api.tag;
-    var arr = [];
 
     fetch(url).then((res) => res.json())
     .then((resData) => {
-      this.setState({dataSource: this.state.dataSource.cloneWithRows(resData.response.filter(item => item.photos && item.photos.length > 0))});
-      console.log(resData.response[0].photos[0].alt_sizes[2].url);
+      var list = resData.response.filter(item => item.photos && item.photos.length > 0);
+      this.setState({list: list});
+      this.setState({dataSource: this.state.dataSource.cloneWithRows(list)});
+      console.log(list);
+    });
+  }
+
+  onInfinite() {
+    var url = this.api.uri + '?api_key=' + this.api.key + '&tag=' + this.api.tag;
+
+    fetch(url).then((res) => res.json())
+    .then((resData) => {
+      console.log(this.state.list);
+      var refreshedList = this.state.list.concat(resData.response.filter(item => item.photos && item.photos.length > 0));
+      // resData.response.filter(item => item.photos && item.photos.length > 0).map((data) => {
+      //   data.blog_name = data.blog_name + 1;
+      //   // console.log(data);
+      // });
+
+      setTimeout(() => {
+        this.list.hideFooter();
+        this.setState({list: refreshedList});
+        this.setState({dataSource: this.state.dataSource.cloneWithRows(refreshedList)});
+        console.log(refreshedList);
+      }, 1000);
+
     });
   }
 
@@ -52,12 +78,17 @@ class ExperimentProject extends Component {
 
   render() {
     return (
-      // <Image source={{uri: this.state.imageUrl}} style={{width: 100, height: 100}} />
-      <ListView
-        style={styles.container}
+      <RefreshInfiniteListView
+        ref = {(list) => {this.list = list}}
         dataSource={this.state.dataSource}
         renderRow={this.renderData.bind(this)}
         renderSeparator={(sectionId, rowId) => <View key={rowId} style={styles.separator} />}
+        // loadedAllData={this.loadedAllData}
+        // initialListSize={30}
+        // scrollEventThrottle={10}
+        style={styles.container}
+        // onRefresh = {this.onRefresh}
+        onInfinite = {this.onInfinite.bind(this)}
       />
     );
   }
